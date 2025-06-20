@@ -66,7 +66,7 @@ export const MedicationProvider = ({ children }: MedicationProviderProps) => {
     queryFn: async () => {
       if (!token) return [];
       
-      const response = await fetch('http://localhost:5000/api/medications', {
+      const response = await fetch('https://gossamer-lilac-fog.glitch.me/api/medications', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -92,7 +92,7 @@ export const MedicationProvider = ({ children }: MedicationProviderProps) => {
     queryFn: async () => {
       if (!token) return [];
       
-      const response = await fetch('http://localhost:5000/api/medication-logs', {
+      const response = await fetch('https://gossamer-lilac-fog.glitch.me/api/medication-logs', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -111,7 +111,7 @@ export const MedicationProvider = ({ children }: MedicationProviderProps) => {
   // Add medication mutation
   const addMedicationMutation = useMutation({
     mutationFn: async (medication: Omit<Medication, 'id' | 'created_at'>) => {
-      const response = await fetch('http://localhost:5000/api/medications', {
+      const response = await fetch('https://gossamer-lilac-fog.glitch.me/api/medications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export const MedicationProvider = ({ children }: MedicationProviderProps) => {
   // Update medication mutation
   const updateMedicationMutation = useMutation({
     mutationFn: async ({ id, medication }: { id: number; medication: Omit<Medication, 'id' | 'created_at'> }) => {
-      const response = await fetch(`http://localhost:5000/api/medications/${id}`, {
+      const response = await fetch(`https://gossamer-lilac-fog.glitch.me/api/medications/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ export const MedicationProvider = ({ children }: MedicationProviderProps) => {
   // Delete medication mutation
   const deleteMedicationMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`http://localhost:5000/api/medications/${id}`, {
+      const response = await fetch(`https://gossamer-lilac-fog.glitch.me/api/medications/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -187,7 +187,7 @@ export const MedicationProvider = ({ children }: MedicationProviderProps) => {
         formData.append('proof_image', proofImage);
       }
       
-      const response = await fetch(`http://localhost:5000/api/medications/${medicationId}/log`, {
+      const response = await fetch(`https://gossamer-lilac-fog.glitch.me/api/medications/${medicationId}/log`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -212,7 +212,7 @@ export const MedicationProvider = ({ children }: MedicationProviderProps) => {
   const getMedicationLogs = async (startDate?: string, endDate?: string) => {
     if (!token) return [];
     
-    let url = 'http://localhost:5000/api/medication-logs';
+    let url = 'https://gossamer-lilac-fog.glitch.me/api/medication-logs';
     const params = new URLSearchParams();
     
     if (startDate) params.append('startDate', startDate);

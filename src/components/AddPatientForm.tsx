@@ -29,7 +29,7 @@ const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
   const { data: patients = [] } = useQuery<Patient[]>({
     queryKey: ["usersPatients"],
     queryFn: async () => {
-      const res = await axios.get("http://localhost:5000/api/users/patients", {
+      const res = await axios.get("https://gossamer-lilac-fog.glitch.me/api/users/patients", {
         headers: { Authorization: `Bearer ${token}` },
       });
       return res.data;
@@ -39,7 +39,7 @@ const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
 
   const handleAddPatient = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/caretaker/patients", {
+      const response = await fetch("https://gossamer-lilac-fog.glitch.me/api/caretaker/patients", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
