@@ -1,30 +1,26 @@
 
 import { useState } from "react";
-import Onboarding from "@/components/Onboarding";
-import PatientDashboard from "@/components/PatientDashboard";
+import PatientDashboardNew from "@/components/PatientDashboardNew";
 import CaretakerDashboard from "@/components/CaretakerDashboard";
 import { Button } from "@/components/ui/button";
-import { Users, User } from "lucide-react";
+import { Users, User, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
-type UserType = "patient" | "caretaker" | null;
+type UserType = "patient" | "caretaker";
 
 const Index = () => {
-  const [userType, setUserType] = useState<UserType>(null);
-  const [isOnboarded, setIsOnboarded] = useState(false);
-
-  const handleOnboardingComplete = (type: UserType) => {
-    setUserType(type);
-    setIsOnboarded(true);
-  };
+  const { user, logout } = useAuth();
+  const [userType, setUserType] = useState<UserType>(user?.role || "patient");
 
   const switchUserType = () => {
     const newType = userType === "patient" ? "caretaker" : "patient";
     setUserType(newType);
   };
 
-  if (!isOnboarded) {
-    return <Onboarding onComplete={handleOnboardingComplete} />;
-  }
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/login";
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -42,19 +38,30 @@ const Index = () => {
             </div>
           </div>
           
-          <Button 
-            variant="outline" 
-            onClick={switchUserType}
-            className="flex items-center gap-2 hover:bg-accent transition-colors"
-          >
-            {userType === "patient" ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
-            Switch to {userType === "patient" ? "Caretaker" : "Patient"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={switchUserType}
+              className="flex items-center gap-2 hover:bg-accent transition-colors"
+            >
+              {userType === "patient" ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
+              Switch to {userType === "patient" ? "Caretaker" : "Patient"}
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              onClick={handleLogout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto p-6">
-        {userType === "patient" ? <PatientDashboard /> : <CaretakerDashboard />}
+        {userType === "patient" ? <PatientDashboardNew /> : <CaretakerDashboard />}
       </main>
     </div>
   );
