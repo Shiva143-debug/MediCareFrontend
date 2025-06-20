@@ -7,7 +7,16 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Mail, Bell } from "lucide-react";
-const NotificationSettings = () => {
+
+interface NotificationSettingsProps {
+  patientName: string;
+  adherenceRate: number;
+  currentStreak: number;
+  isTodayTaken: boolean;
+}
+
+const NotificationSettings = ({ patientName ,adherenceRate,currentStreak,isTodayTaken}: NotificationSettingsProps) => {
+  
   const [settings, setSettings] = useState({
     emailNotifications: true,
     emailAddress: "caretaker@example.com",
@@ -115,25 +124,41 @@ const NotificationSettings = () => {
             Email Preview
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="bg-gray-50 p-4 rounded-lg border">
-            <div className="text-sm">
-              <div className="font-medium mb-2">Subject: Medication Alert - Eleanor Thompson</div>
-              <div className="text-muted-foreground">
-                <p className="mb-2">Hello,</p>
-                <p className="mb-2">
-                  This is a reminder that Eleanor Thompson has not taken her medication today.
-                </p>
-                <p className="mb-2">
-                  Please check with her to ensure she takes her prescribed medication.
-                </p>
-                <p>
-                  Current adherence rate: 85% (5-day streak)
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
+<CardContent>
+  <div className="bg-gray-50 p-4 rounded-lg border">
+    <div className="text-sm">
+      <div className="font-medium mb-2">
+        Subject: Medication Alert - {patientName}
+      </div>
+      <div className="text-muted-foreground">
+        <p className="mb-2">Hello,</p>
+        {isTodayTaken ? (
+          <>
+            <p className="mb-2">
+              This is to inform you that <strong>{patientName}</strong> has successfully taken their medication today.
+            </p>
+            <p className="mb-2">
+              Great job! Keep supporting them on their journey to better health.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mb-2">
+              This is a reminder that <strong>{patientName}</strong> has not taken their daily medication today.
+            </p>
+            <p className="mb-2">
+              Please check with <strong>{patientName}</strong> to ensure they take their prescribed medication.
+            </p>
+          </>
+        )}
+        <p>
+          Current adherence rate: {adherenceRate}% ({currentStreak}-day streak)
+        </p>
+      </div>
+    </div>
+  </div>
+</CardContent>
+
       </Card>
 
       {/* Save Button */}

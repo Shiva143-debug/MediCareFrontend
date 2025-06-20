@@ -19,7 +19,7 @@ const Index = () => {
 
   const handleLogout = () => {
     logout();
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   return (

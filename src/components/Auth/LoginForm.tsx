@@ -38,7 +38,7 @@ const LoginForm = ({ onToggleForm }: LoginFormProps) => {
         title: "Success",
         description: "You have successfully logged in",
       });
-      navigate("/"); 
+      navigate("/dashboard"); 
 
     } catch (error) {
       toast({

@@ -122,6 +122,9 @@ const CaretakerDashboard = () => {
     subDays(new Date(), i)
   );
 
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+const isTodayTaken = takenDates.has(todayStr);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -158,28 +161,28 @@ const CaretakerDashboard = () => {
       </div>
 
       {/* Patient Switcher */}
-<div className="flex flex-wrap justify-between items-center gap-4">
-  {/* Patient Buttons */}
-  <div className="flex flex-wrap gap-2">
-    {patients.map((p: any) => (
-      <Button
-        key={p.id}
-        onClick={() => setSelectedPatientId(p.id)}
-        variant={p.id === selectedPatientId ? "default" : "outline"}
-      >
-        {p.username}
-      </Button>
-    ))}
-  </div>
+      <div className="flex flex-wrap justify-between items-center gap-4">
+        {/* Patient Buttons */}
+        <div className="flex flex-wrap gap-2">
+          {patients.map((p: any) => (
+            <Button
+              key={p.id}
+              onClick={() => setSelectedPatientId(p.id)}
+              variant={p.id === selectedPatientId ? "default" : "outline"}
+            >
+              {p.username}
+            </Button>
+          ))}
+        </div>
 
-  {/* Link a Patient Form */}
-    {/* <h3 className="text-lg font-semibold hidden md:block self-center">Link a Patient</h3> */}
-  <div className="flex flex-col md:flex-row gap-2">
-    <AddPatientForm onPatientAdded={refetch} />
-  </div>
-</div>
+        {/* Link a Patient Form */}
+        {/* <h3 className="text-lg font-semibold hidden md:block self-center">Link a Patient</h3> */}
+        <div className="flex flex-col md:flex-row gap-2">
+          <AddPatientForm onPatientAdded={refetch} />
+        </div>
+      </div>
 
-<hr/>
+      <hr />
 
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -240,8 +243,11 @@ const CaretakerDashboard = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Adherence Progress</CardTitle>
+              <CardTitle>Monthly Adherence Progress</CardTitle>
             </CardHeader>
+            <div className="text-sm font-semibold mb-2 text-center text-gray-700">
+              {adherenceRate}% adherence this month
+            </div>
             <CardContent>
               <Progress value={adherenceRate} />
               <div className="flex justify-between mt-2 text-sm">
@@ -326,20 +332,20 @@ const CaretakerDashboard = () => {
                       },
                     }}
                   />
-                                <div className="mt-4 space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full" />
-                  <span>Medication taken</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-400 rounded-full" />
-                  <span>Missed medication</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                  <span>Today</span>
-                </div>
-              </div>
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full" />
+                      <span>Medication taken</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-red-400 rounded-full" />
+                      <span>Missed medication</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                      <span>Today</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Details Section */}
@@ -385,7 +391,7 @@ const CaretakerDashboard = () => {
 
 
         <TabsContent value="notifications">
-          <NotificationSettings />
+          <NotificationSettings patientName={patientName} adherenceRate={adherenceRate} currentStreak={currentStreak} isTodayTaken={isTodayTaken}/>
         </TabsContent>
       </Tabs>
     </div>
