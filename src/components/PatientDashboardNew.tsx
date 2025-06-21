@@ -9,17 +9,21 @@ import { useMedication } from "@/contexts/MedicationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import MedicationList from "./Medications/MedicationList";
 import AddMedicationForm from "./Medications/AddMedicationForm";
+import MedicationTracker from "./MedicationTracker";
 import { useToast } from "@/hooks/use-toast";
 
 const PatientDashboardNew = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddMedicationOpen, setIsAddMedicationOpen] = useState(false);
-
+  const [medAddedTrigger, setMedAddedTrigger] = useState(0);
+  const [recentlyMarked, setRecentlyMarked] = useState<number[]>([]);
+  const { medications } = useMedication();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const {
     medicationLogs,
     isLoadingLogs,
+    // refetch,
     getCurrentStreak,
     getAdherenceRate,
   } = useMedication();
@@ -44,7 +48,7 @@ const PatientDashboardNew = () => {
   };
 
   const selectedDateLogs = getLogsForDate(selectedDateStr);
-  const isMedicationTakenToday = isMedicationTakenOnDate(todayStr);
+  // const isMedicationTakenToday = isMedicationTakenOnDate(todayStr);
 
   const takenDates = new Set(
     medicationLogs.map((log) =>
@@ -55,22 +59,70 @@ const PatientDashboardNew = () => {
   const adherenceRate = getAdherenceRate();
   const currentStreak = getCurrentStreak();
 
+  const addMedicationLog = async ({
+    medicationId,
+    date,
+    image,
+  }: {
+    medicationId: number;
+    date: string;
+    image?: File;
+  }) => {
+    try {
+      const formData = new FormData();
+      formData.append("taken_at", date);
+      if (image) formData.append("image", image);
+
+      await fetch(`https://gossamer-lilac-fog.glitch.me/api/medications/${medicationId}/log`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      // await refetch();
+      setRecentlyMarked((prev) => [...prev, medicationId]);
+
+      toast({
+        title: "Marked as Taken",
+        description: "Medication successfully marked with optional photo.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark medication. Try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
+
+  const isMedicationTakenToday = (medicationId: number) => {
+    const takenViaLogs = medicationLogs.some((log) => {
+      const logDate = new Date(log.taken_at).toISOString().split("T")[0];
+      return log.medication_id === medicationId && logDate === todayStr;
+    });
+
+    const takenJustNow = recentlyMarked.includes(medicationId);
+    return takenViaLogs || takenJustNow; // ✅ Include local state
+  };
+
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-500 to-green-500 rounded-2xl p-8 text-white">
         <div className="flex items-center gap-4 mb-4">
           <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
-            <User className="w-8 h-8" />
           </div>
           <div>
             <h2 className="text-3xl font-bold">
               Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 18 ? "Afternoon" : "Evening"},{" "}
               {user?.username}!
             </h2>
-            <p className="text-white/90 text-lg">
-              Ready to stay on track with your medication?
-            </p>
+            <p className="text-white/90 text-lg">Ready to stay on track with your medication?</p>
           </div>
         </div>
 
@@ -93,9 +145,10 @@ const PatientDashboardNew = () => {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Today's Medication */}
-        <div className="lg:col-span-2">
-          <Card className="h-fit">
+        {/* Left Column: Today's Medications + Tracker */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Medication List */}
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-2xl">
                 <CalendarIcon className="w-6 h-6 text-blue-600" />
@@ -104,7 +157,17 @@ const PatientDashboardNew = () => {
                   : `Medication for ${format(selectedDate, "MMMM d, yyyy")}`}
               </CardTitle>
               <Button
-                onClick={() => setIsAddMedicationOpen(true)}
+                onClick={() => {
+                  if (user?.role === "caretaker") {
+                    toast({
+                      title: "Access Denied",
+                      description: "Caretakers cannot add medications.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  setIsAddMedicationOpen(true);
+                }}
                 variant="outline"
                 size="sm"
                 disabled={!isTodaySelected}
@@ -115,13 +178,33 @@ const PatientDashboardNew = () => {
             </CardHeader>
             <CardContent>
               <MedicationList
+                key={medAddedTrigger}
                 onAddMedication={() => setIsAddMedicationOpen(true)}
               />
+
             </CardContent>
           </Card>
+
+          {user?.role !== "caretaker" &&
+            isTodaySelected &&
+            medications.map((med) => (
+              <MedicationTracker
+                // key={medAddedTrigger}
+                key={med.id}
+                medicationId={med.id}
+                 medicationName={med.name} 
+                date={todayStr}
+                isTaken={isMedicationTakenToday(med.id)} 
+                isToday={true}
+                onMarkTaken={(medicationId, date, image) => {
+                  addMedicationLog({ medicationId, date, image });
+                }}
+              />
+            ))}
+
         </div>
 
-        {/* Calendar */}
+        {/* Right Column: Calendar */}
         <div>
           <Card>
             <CardHeader>
@@ -135,9 +218,8 @@ const PatientDashboardNew = () => {
                   if (!date) return;
                   if (!isToday(date)) {
                     toast({
-                      title: "You can't select a different day.",
-                      description:
-                        "You can only interact with today's medication.",
+                      title: "Only today's date is interactive",
+                      description: "You can only manage medication for today.",
                       variant: "destructive",
                     });
                     return;
@@ -219,14 +301,13 @@ const PatientDashboardNew = () => {
           </Card>
         </div>
       </div>
-
       <AddMedicationForm
         isOpen={isAddMedicationOpen}
         onClose={() => setIsAddMedicationOpen(false)}
+        onAdded={() => setMedAddedTrigger((prev) => prev + 1)}
       />
     </div>
   );
 };
 
 export default PatientDashboardNew;
-

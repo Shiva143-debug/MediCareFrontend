@@ -25,8 +25,13 @@ const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
   const { token } = useAuth();
   const { toast } = useToast();
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: patients = [] } = useQuery<Patient[]>({
+  const {
+    data: patients = [],
+    isLoading,
+    isError,
+  } = useQuery<Patient[]>({
     queryKey: ["usersPatients"],
     queryFn: async () => {
       const res = await axios.get("https://gossamer-lilac-fog.glitch.me/api/users/patients", {
@@ -38,6 +43,9 @@ const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
   });
 
   const handleAddPatient = async () => {
+    if (!selectedPatientId) return;
+    setIsSubmitting(true);
+
     try {
       const response = await fetch("https://gossamer-lilac-fog.glitch.me/api/caretaker/patients", {
         method: "POST",
@@ -56,8 +64,6 @@ const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
 
       toast({ title: "Success", description: data.message });
       setSelectedPatientId("");
-
-      // 👇 Refresh patients list in CaretakerDashboard
       onPatientAdded?.();
     } catch (err: any) {
       toast({
@@ -65,12 +71,18 @@ const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
         description: err.message || "Something went wrong",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="flex flex-col md:flex-row gap-3 mt-4">
-      <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+      <Select
+        value={selectedPatientId}
+        onValueChange={setSelectedPatientId}
+        disabled={isLoading || isError || isSubmitting}
+      >
         <SelectTrigger className="w-64">
           <SelectValue placeholder="Select a patient to add" />
         </SelectTrigger>
@@ -88,8 +100,12 @@ const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
           )}
         </SelectContent>
       </Select>
-      <Button onClick={handleAddPatient} disabled={!selectedPatientId}>
-        Add Patient
+
+      <Button
+        onClick={handleAddPatient}
+        disabled={!selectedPatientId || isSubmitting}
+      >
+        {isSubmitting ? "Adding..." : "Add Patient"}
       </Button>
     </div>
   );

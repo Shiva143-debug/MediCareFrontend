@@ -7,12 +7,18 @@ interface User {
   role: 'patient' | 'caretaker';
 }
 
-interface AuthContextType {
+// ✅ Exported the type for testing or other files
+export interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string, email: string, role: 'patient' | 'caretaker') => Promise<void>;
+  register: (
+    username: string,
+    password: string,
+    email: string,
+    role: 'patient' | 'caretaker'
+  ) => Promise<void>;
   logout: () => void;
   loading: boolean;
   error: string | null;
@@ -38,16 +44,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if user is already logged in
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
-    
     if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
       setToken(storedToken);
     }
-    
     setLoading(false);
   }, []);
 
@@ -55,25 +58,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setLoading(true);
       setError(null);
-      
       const response = await fetch('https://gossamer-lilac-fog.glitch.me/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      
+
       const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-      
+
+      if (!response.ok) throw new Error(data.error || 'Login failed');
+
       setUser(data.user);
       setToken(data.token);
-      
-      
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('token', data.token);
     } catch (err) {
@@ -84,28 +80,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const register = async (username: string, password: string, email: string, role: 'patient' | 'caretaker') => {
+  const register = async (
+    username: string,
+    password: string,
+    email: string,
+    role: 'patient' | 'caretaker'
+  ) => {
     try {
       setLoading(true);
       setError(null);
-      
       const response = await fetch('https://gossamer-lilac-fog.glitch.me/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, email, role }),
       });
-      
+
       const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
-      
+      if (!response.ok) throw new Error(data.error || 'Registration failed');
+
       setUser(data.user);
       setToken(data.token);
-      
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('token', data.token);
     } catch (err) {
@@ -123,7 +117,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('token');
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     token,
     isAuthenticated: !!user,
@@ -136,3 +130,5 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export { AuthContext };

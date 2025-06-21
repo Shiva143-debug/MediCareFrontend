@@ -314,3 +314,5 @@ export const MedicationProvider = ({ children }: MedicationProviderProps) => {
 
   return <MedicationContext.Provider value={value}>{children}</MedicationContext.Provider>;
 };
+
+export {MedicationContext}

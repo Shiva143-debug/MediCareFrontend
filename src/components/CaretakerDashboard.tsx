@@ -16,8 +16,8 @@ import AddPatientForm from "./AddPatientForm";
 const CaretakerDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const { token } = useAuth();
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
+   const { user, token } = useAuth();
 
   const {
     data: patients = [],
@@ -123,7 +123,7 @@ const CaretakerDashboard = () => {
   );
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
-const isTodayTaken = takenDates.has(todayStr);
+  const isTodayTaken = takenDates.has(todayStr);
 
   return (
     <div className="space-y-6">
@@ -131,11 +131,11 @@ const isTodayTaken = takenDates.has(todayStr);
       <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl p-8 text-white">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
-            <Users className="w-8 h-8" />
           </div>
           <div>
             <h2 className="text-3xl font-bold">Caretaker Dashboard</h2>
             <p className="text-white/90 text-lg">Monitoring {patientName}'s medication adherence</p>
+            {user?.role == "patient" && <p style={{ color: "red" }}>Oops! It looks like this page is restricted. Patients don't have access to view this content.</p>}
           </div>
         </div>
         {selectedPatientId && (
@@ -160,27 +160,31 @@ const isTodayTaken = takenDates.has(todayStr);
         )}
       </div>
 
-      {/* Patient Switcher */}
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        {/* Patient Buttons */}
-        <div className="flex flex-wrap gap-2">
-          {patients.map((p: any) => (
-            <Button
-              key={p.id}
-              onClick={() => setSelectedPatientId(p.id)}
-              variant={p.id === selectedPatientId ? "default" : "outline"}
-            >
-              {p.username}
-            </Button>
-          ))}
-        </div>
+      {/* Patient Selection Section */}
+     { user?.role !== "patient" &&
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Manage Patients</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-wrap gap-2">
+            {patients.map((p: any) => (
+              <Button
+                key={p.id}
+                onClick={() => setSelectedPatientId(p.id)}
+                variant={p.id === selectedPatientId ? "default" : "outline"}
+              >
+                {p.username}
+              </Button>
+            ))}
+          </div>
+          <div className="w-full md:w-auto">
+            <AddPatientForm onPatientAdded={refetch} />
+          </div>
+        </CardContent>
+      </Card>
+}
 
-        {/* Link a Patient Form */}
-        {/* <h3 className="text-lg font-semibold hidden md:block self-center">Link a Patient</h3> */}
-        <div className="flex flex-col md:flex-row gap-2">
-          <AddPatientForm onPatientAdded={refetch} />
-        </div>
-      </div>
 
       <hr />
 
@@ -241,22 +245,31 @@ const isTodayTaken = takenDates.has(todayStr);
             </Card>
           </div>
 
-          <Card>
+          <Card className="mt-6">
             <CardHeader>
               <CardTitle>Monthly Adherence Progress</CardTitle>
             </CardHeader>
-            <div className="text-sm font-semibold mb-2 text-center text-gray-700">
-              {adherenceRate}% adherence this month
-            </div>
-            <CardContent>
-              <Progress value={adherenceRate} />
-              <div className="flex justify-between mt-2 text-sm">
-                <span className="text-green-600">{takenCount} days Taken</span>
-                <span className="text-red-600">{missedCount} days Missed</span>
-                <span className="text-blue-600">{remainingCount} days Remaining</span>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
+                <span className="text-sm font-semibold text-black">{adherenceRate}%</span>
+              </div>
+
+              <div className="h-4 w-full rounded-full bg-gray-200 overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${adherenceRate}%` }}
+                />
+              </div>
+
+              <div className="flex justify-between text-sm font-medium pt-2">
+                <span className="text-green-600">{takenCount} days</span>
+                <span className="text-red-600">{missedCount} days</span>
+                <span className="text-blue-600">{remainingCount} days</span>
               </div>
             </CardContent>
           </Card>
+
         </TabsContent>
         <TabsContent value="activity">
           <Card>
@@ -391,7 +404,7 @@ const isTodayTaken = takenDates.has(todayStr);
 
 
         <TabsContent value="notifications">
-          <NotificationSettings patientName={patientName} adherenceRate={adherenceRate} currentStreak={currentStreak} isTodayTaken={isTodayTaken}/>
+          <NotificationSettings patientName={patientName} adherenceRate={adherenceRate} currentStreak={currentStreak} isTodayTaken={isTodayTaken} />
         </TabsContent>
       </Tabs>
     </div>

@@ -7,8 +7,9 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-// import { open } from 'sqlite';
-// import { fileURLToPath } from 'url';
+
+const { calculateAdherence } = require('./utils/adherence');
+
 const { open } = require('sqlite');
 const { fileURLToPath } = require('url');
 
@@ -547,6 +548,31 @@ app.get('/api/users/patients', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching patients:', error);
     res.status(500).json({ error: 'Server error fetching patients' });
+  }
+});
+
+
+// Adherence calculation route
+app.get('/api/adherence', authenticateToken, async (req, res) => {
+  try {
+    const totalMeds = await db.all('SELECT id FROM medications WHERE user_id = ?', [req.user.id]);
+    if (totalMeds.length === 0) return res.json({ adherence: 0 });
+
+    const today = new Date().toISOString().split('T')[0];
+    const logs = await db.all(
+      'SELECT DISTINCT medication_id FROM medication_logs WHERE user_id = ? AND date(taken_at) = ?',
+      [req.user.id, today]
+    );
+
+    const takenCount = logs.length;
+    const totalCount = totalMeds.length;
+
+    const adherence = calculateAdherence(takenCount, totalCount);
+
+    res.json({ adherence, totalCount, takenCount });
+  } catch (error) {
+    console.error('Error calculating adherence:', error);
+    res.status(500).json({ error: 'Server error calculating adherence' });
   }
 });
 

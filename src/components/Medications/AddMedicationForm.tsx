@@ -11,9 +11,10 @@ import { Loader2 } from "lucide-react";
 interface AddMedicationFormProps {
   isOpen: boolean;
   onClose: () => void;
+  onAdded?: () => void;
 }
 
-const AddMedicationForm = ({ isOpen, onClose }: AddMedicationFormProps) => {
+const AddMedicationForm = ({ isOpen, onClose,onAdded }: AddMedicationFormProps) => {
   const [name, setName] = useState("");
   const [dosage, setDosage] = useState("");
   const [frequency, setFrequency] = useState("daily");
@@ -55,7 +56,9 @@ const AddMedicationForm = ({ isOpen, onClose }: AddMedicationFormProps) => {
       setDosage("");
       setFrequency("daily");
       setTime("08:00");
+      
       onClose();
+      onAdded?.();
     } catch (error) {
       toast({
         title: "Error",
